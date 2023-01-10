@@ -24,7 +24,8 @@
 
   dependencies:    juce_organicui
   windowsLibs:	   Setupapi
-
+  OSXLibs:          libserial
+ 
  END_JUCE_MODULE_DECLARATION
 
 *******************************************************************************/
@@ -42,8 +43,8 @@
 
 
 #include <juce_organicui/juce_organicui.h>
-
 using namespace juce;
+
 
 
 #include "serial/serial.h"

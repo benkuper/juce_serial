@@ -15,11 +15,13 @@
 #error "Incorrect use of JUCE cpp file"
 #endif
 
+
 #include "juce_serial.h"
 
 #include "lib/serial/impl/list_ports/list_ports_linux.cc"
-#include "lib/serial/impl/list_ports/list_ports_osx.cc"
+//#include "lib/serial/impl/list_ports/list_ports_osx.cc"
 #include "lib/serial/impl/list_ports/list_ports_win.cc"
+
 
 #include "lib/serial/impl/unix.cc"
 #include "lib/serial/impl/win.cc"

@@ -10,13 +10,13 @@
 #endif
 
 
-#include "serial/serial.h"
+#include "../../serial/serial.h"
 
 
 #ifdef _WIN32
-#include "serial/impl/win.h"
+#include "../../serial/impl/win.h"
 #else
-#include "serial/impl/unix.h"
+#include "../../serial/impl/unix.h"
 #endif
 
 

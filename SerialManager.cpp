@@ -10,6 +10,7 @@
 
 juce_ImplementSingleton(SerialManager)
 
+
 SerialManager::SerialManager()
 {
 	updateDeviceList();
@@ -24,7 +25,7 @@ SerialManager::~SerialManager()
 void SerialManager::updateDeviceList()
 {
 #if SERIALSUPPORT
-	std::vector<serial::PortInfo> devices_found = serial::list_ports();
+    std::vector<serial::PortInfo> devices_found = serial::list_ports();
 	std::vector<serial::PortInfo>::iterator iter = devices_found.begin();
 
 	OwnedArray<SerialDeviceInfo> newInfos;
