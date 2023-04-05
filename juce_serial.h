@@ -24,7 +24,7 @@
 
   dependencies:    juce_organicui
   windowsLibs:	   Setupapi
-  OSXLibs:          libserial
+  OSXLibs:         libserial
  
  END_JUCE_MODULE_DECLARATION
 
