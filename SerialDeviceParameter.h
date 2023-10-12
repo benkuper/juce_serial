@@ -26,6 +26,7 @@ public:
 	Array<int> vidFilters;
 	Array<int> pidFilters;
 
+	void setValueFromDevice(SerialDevice* device);
 	void setValueInternal(var &value) override;
 
 	void updatePortList();

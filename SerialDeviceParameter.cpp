@@ -8,6 +8,8 @@
   ==============================================================================
 */
 
+#include "JuceHeader.h"
+
 SerialDeviceParameter::SerialDeviceParameter(const String& name, const String& description, bool enabled) :
 	EnumParameter(name, description, enabled),
 	currentDevice(nullptr),
@@ -25,6 +27,14 @@ SerialDeviceParameter::~SerialDeviceParameter()
 SerialDevice* SerialDeviceParameter::getDevice()
 {
 	return currentDevice;
+}
+
+void SerialDeviceParameter::setValueFromDevice(SerialDevice* device)
+{
+	var data(new DynamicObject());
+	data.getDynamicObject()->setProperty("deviceID", device->info->deviceID);
+	data.getDynamicObject()->setProperty("port", device->info->port);
+	setValue(data);
 }
 
 void SerialDeviceParameter::setValueInternal(var& v)
