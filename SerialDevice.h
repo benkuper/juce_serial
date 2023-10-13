@@ -90,6 +90,8 @@ public:
 
 	PortMode mode;
 	void setMode(PortMode mode);
+	void setDTR(bool val);
+	void setRTS(bool val);
 	void setBaudRate(int baudRate);
 	void setParity(int parity);
 	void setStopBits(int stopBits);

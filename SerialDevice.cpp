@@ -52,6 +52,16 @@ void SerialDevice::setMode(PortMode _mode)
 	mode = _mode;
 }
 
+void SerialDevice::setDTR(bool val)
+{
+	if(port != nullptr) port->setDTR(val);
+}
+
+void SerialDevice::setRTS(bool val)
+{
+	if(port != nullptr) port->setRTS(val);
+}
+
 void SerialDevice::setBaudRate(int baudRate)
 {
 	if (port != nullptr)
@@ -108,8 +118,8 @@ void SerialDevice::open(int baud)
 	{
 		if (baud != -1) port->setBaudrate(baud);
 		if (!port->isOpen())  port->open();
-		port->setDTR();
-		port->setRTS();
+		//port->setDTR();
+		//port->setRTS();
 
 
 		if (!thread.isThreadRunning())
