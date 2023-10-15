@@ -86,6 +86,9 @@ public:
 
 	SerialDeviceInfo * info;
 
+	bool dtr;
+	bool rts;
+
 	bool openedOk; //have to have that because when erroring on openPort, port stills says it's open
 
 	PortMode mode;

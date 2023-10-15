@@ -22,13 +22,19 @@ public:
 	SerialDevice * getDevice();
 
 	String ghostData;
-	int openBaudRate;
+	int baudRate;
+	bool dtr;
+	bool rts;
 	Array<int> vidFilters;
 	Array<int> pidFilters;
 
 	void setValueFromDevice(SerialDevice* device);
 	void setValueInternal(var &value) override;
 
+	void setBaudrate(int val);
+	void setDTR(bool val);
+	void setRTS(bool val);
+	void setVIDPIDFilters(Array<int> vidFilters, Array<int> pidFilters);
 	void updatePortList();
 
 	// Inherited via SerialManagerListener

@@ -9,11 +9,14 @@
 */
 
 #include "JuceHeader.h"
+#include "SerialDeviceParameter.h"
 
 SerialDeviceParameter::SerialDeviceParameter(const String& name, const String& description, bool enabled) :
 	EnumParameter(name, description, enabled),
 	currentDevice(nullptr),
-	openBaudRate(9600)
+	baudRate(115200),
+	dtr(false),
+	rts(false)
 {
 	SerialManager::getInstance()->addSerialManagerListener(this);
 	updatePortList();
@@ -42,8 +45,39 @@ void SerialDeviceParameter::setValueInternal(var& v)
 	EnumParameter::setValueInternal(v);
 	var data = getValueData();
 	if (data.isVoid()) currentDevice = nullptr;
-	else currentDevice = SerialManager::getInstance()->getPort(data.getProperty("deviceID", "").toString(), data.getProperty("port", "").toString(), true, openBaudRate);
+	else currentDevice = SerialManager::getInstance()->getPort(data.getProperty("deviceID", "").toString(), data.getProperty("port", "").toString(), true, baudRate);
+
+	if (currentDevice != nullptr)
+	{
+		currentDevice->setDTR(dtr);
+		currentDevice->setRTS(rts);
+	}
 	//DBG("current device from setValueInternal : " << (int)currentDevice);
+}
+
+void SerialDeviceParameter::setBaudrate(int val)
+{
+	baudRate = val;
+	if (currentDevice != nullptr) currentDevice->setBaudRate(baudRate);
+}
+
+void SerialDeviceParameter::setDTR(bool val)
+{
+	dtr = val;
+	if (currentDevice != nullptr) currentDevice->setDTR(dtr);
+}
+
+void SerialDeviceParameter::setRTS(bool val)
+{
+	rts = val;
+	if (currentDevice != nullptr) currentDevice->setRTS(rts);
+}
+
+void SerialDeviceParameter::setVIDPIDFilters(Array<int> vidFilters, Array<int> pidFilters)
+{
+	this->vidFilters = vidFilters;
+	this->pidFilters = pidFilters;
+	updatePortList();
 }
 
 void SerialDeviceParameter::updatePortList()
