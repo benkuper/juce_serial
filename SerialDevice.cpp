@@ -20,7 +20,6 @@ SerialDevice::SerialDevice(Serial* _port, SerialDeviceInfo* _info, PortMode _mod
 	rts(false),
 	openedOk(false)
 {
-	open();
 }
 #else
 SerialDevice::SerialDevice(SerialDeviceInfo* _info, PortMode _mode) :
@@ -58,13 +57,13 @@ void SerialDevice::setMode(PortMode _mode)
 void SerialDevice::setDTR(bool val)
 {
 	dtr = val;
-	if (port != nullptr) port->setDTR(val);
+	if (port != nullptr && port->isOpen()) port->setDTR(val);
 }
 
 void SerialDevice::setRTS(bool val)
 {
 	rts = val;
-	if (port != nullptr) port->setRTS(val);
+	if (port != nullptr && port->isOpen()) port->setRTS(val);
 }
 
 void SerialDevice::setBaudRate(int baudRate)
@@ -123,9 +122,11 @@ void SerialDevice::open(int baud)
 	{
 		if (baud != -1) port->setBaudrate(baud);
 		if (!port->isOpen())  port->open();
-		port->setDTR(dtr);
-		port->setRTS(rts);
-
+		if (port->isOpen())
+		{
+			port->setDTR(dtr);
+			port->setRTS(rts);
+		}
 
 		if (!thread.isThreadRunning())
 		{
@@ -136,10 +137,10 @@ void SerialDevice::open(int baud)
 			thread.addAsyncSerialListener(this);
 #endif
 			listeners.call(&SerialDeviceListener::portOpened, this);
-	}
+		}
 
 		openedOk = true;
-}
+	}
 	catch (std::exception e)
 	{
 		NLOGERROR("Serial", "Error opening the port " << info->description << ", try reconnecting the device.");
@@ -175,7 +176,7 @@ void SerialDevice::close()
 		}
 
 		listeners.call(&SerialDeviceListener::portClosed, this);
-}
+	}
 #endif
 }
 
@@ -201,7 +202,7 @@ int SerialDevice::writeString(String message)
 	{
 		LOGWARNING("Error writing to serial : " << e.what());
 		return 0;
-}
+	}
 
 #else
 	return 0;
@@ -220,11 +221,11 @@ int SerialDevice::writeBytes(Array<uint8_t> data)
 	{
 		NLOGERROR("Serial", "Error writing to serial : " << e.what());
 		return 0;
-}
+	}
 #else
 	return 0;
 #endif
-}
+	}
 
 void SerialDevice::dataReceived(const var& data) {
 	listeners.call(&SerialDeviceListener::serialDataReceived, this, data);
@@ -393,7 +394,7 @@ SerialDeviceInfo::SerialDeviceInfo(String _port, String _description, String _ha
 	{
 		pid = hardwareID.substring(3, 7).getHexValue32();
 		sn = hardwareID;
-}
+	}
 
 	deviceID = hardwareID;
 	uniqueDescription = (vid == 0 && pid == 0) ? _port : description + "(SN : " + sn + ")";

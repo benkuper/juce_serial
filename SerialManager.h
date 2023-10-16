@@ -24,8 +24,8 @@ public:
 
 	void updateDeviceList();
 
-	SerialDevice * getPort(SerialDeviceInfo *  portInfo, bool createIfNotThere = true, int openBaudRate = 9600);
-	SerialDevice * getPort(String deviceID, String portName, bool createIfNotThere = true, int openBaudRate = 9600);
+	SerialDevice * getPort(SerialDeviceInfo *  portInfo, bool createIfNotThere = true);
+	SerialDevice * getPort(String deviceID, String portName, bool createIfNotThere = true);
 
 	void removePort(SerialDevice * p);
 

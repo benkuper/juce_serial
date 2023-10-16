@@ -16,7 +16,8 @@ SerialDeviceParameter::SerialDeviceParameter(const String& name, const String& d
 	currentDevice(nullptr),
 	baudRate(115200),
 	dtr(false),
-	rts(false)
+	rts(false),
+	openOnSet(true)
 {
 	SerialManager::getInstance()->addSerialManagerListener(this);
 	updatePortList();
@@ -45,10 +46,11 @@ void SerialDeviceParameter::setValueInternal(var& v)
 	EnumParameter::setValueInternal(v);
 	var data = getValueData();
 	if (data.isVoid()) currentDevice = nullptr;
-	else currentDevice = SerialManager::getInstance()->getPort(data.getProperty("deviceID", "").toString(), data.getProperty("port", "").toString(), true, baudRate);
+	else currentDevice = SerialManager::getInstance()->getPort(data.getProperty("deviceID", "").toString(), data.getProperty("port", "").toString(), true);
 
 	if (currentDevice != nullptr)
 	{
+		if (openOnSet) currentDevice->open(baudRate);
 		currentDevice->setDTR(dtr);
 		currentDevice->setRTS(rts);
 	}

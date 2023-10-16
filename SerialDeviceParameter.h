@@ -28,6 +28,8 @@ public:
 	Array<int> vidFilters;
 	Array<int> pidFilters;
 
+	bool openOnSet;
+
 	void setValueFromDevice(SerialDevice* device);
 	void setValueInternal(var &value) override;
 
