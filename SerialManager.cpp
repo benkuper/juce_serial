@@ -38,7 +38,8 @@ void SerialManager::updateDeviceList()
 	while (iter != devices_found.end())
 	{
 		serial::PortInfo device = *iter++;
-		SerialDeviceInfo* info = new SerialDeviceInfo(device.port, device.description, device.hardware_id);
+		SerialDeviceInfo* info = new SerialDeviceInfo(String::fromUTF8(device.port.c_str()),
+			String::fromUTF8(device.description.c_str()), String::fromUTF8(device.hardware_id.c_str()));
 
 		/*
 		if(info->pid ==  0 && info->vid == 0)
