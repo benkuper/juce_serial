@@ -91,6 +91,11 @@ public:
 
 	bool openedOk; //have to have that because when erroring on openPort, port stills says it's open
 
+	//Set from any thread when a read or write fails (e.g. device unplugged or reset after sleep).
+	//SerialManager then closes the port on the message thread and tries to reopen it.
+	std::atomic<bool> connectionLost;
+	bool reconnecting;
+
 	PortMode mode;
 	void setMode(PortMode mode);
 	void setDTR(bool val);
@@ -100,8 +105,11 @@ public:
 	void setStopBits(int stopBits);
 	void setDataBits(int dataBits);
 
-	void open(int baud = -1);
+	void open(int baud = -1, bool logErrors = true);
 	void close();
+
+	void notifyConnectionLost(const String& reason);
+	void checkConnection(); //called from SerialManager's timer, on the message thread
 
 
 	bool isOpen();

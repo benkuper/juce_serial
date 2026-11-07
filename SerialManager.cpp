@@ -170,4 +170,13 @@ void SerialManager::removePort(SerialDevice* p)
 void SerialManager::timerCallback()
 {
 	updateDeviceList();
+
+#if SERIALSUPPORT
+	//checkConnection may trigger listeners that remove ports, so iterate on a copy
+	Array<SerialDevice*> ports(openedPorts.getRawDataPointer(), openedPorts.size());
+	for (auto& p : ports)
+	{
+		if (openedPorts.contains(p)) p->checkConnection();
+	}
+#endif
 }
