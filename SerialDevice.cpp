@@ -18,7 +18,9 @@ SerialDevice::SerialDevice(Serial* _port, SerialDeviceInfo* _info, PortMode _mod
 	mode(_mode),
 	dtr(false),
 	rts(false),
-	openedOk(false)
+	openedOk(false),
+	connectionLost(false),
+	reconnecting(false)
 {
 }
 #else
@@ -111,11 +113,12 @@ void SerialDevice::setDataBits(int dataBits)
 	}
 }
 
-void SerialDevice::open(int baud)
+void SerialDevice::open(int baud, bool logErrors)
 {
 #if SERIALSUPPORT
 
 	openedOk = false;
+	connectionLost = false;
 
 	if (port == nullptr) return;
 	try
@@ -141,9 +144,9 @@ void SerialDevice::open(int baud)
 
 		openedOk = true;
 	}
-	catch (std::exception e)
+	catch (const std::exception& e)
 	{
-		NLOGERROR("Serial", "Error opening the port " << info->description << ", try reconnecting the device.");
+		if (logErrors) NLOGERROR("Serial", "Error opening the port " << info->description << " (" << info->port << "), try reconnecting the device : " << e.what());
 		openedOk = false;
 	}
 
@@ -153,6 +156,9 @@ void SerialDevice::open(int baud)
 void SerialDevice::close()
 {
 #if SERIALSUPPORT
+	reconnecting = false;
+	connectionLost = false;
+
 	if (isOpen())
 	{
 
@@ -170,9 +176,9 @@ void SerialDevice::close()
 			port->close();
 
 		}
-		catch (std::exception e)
+		catch (const std::exception& e)
 		{
-			NLOGWARNING("Serial", "Error closing port.");
+			NLOGWARNING("Serial", "Error closing port " << info->port << " : " << e.what());
 		}
 
 		listeners.call(&SerialDeviceListener::portClosed, this);
@@ -192,15 +198,16 @@ bool SerialDevice::isOpen() {
 int SerialDevice::writeString(String message)
 {
 #if SERIALSUPPORT
-	if (!port->isOpen()) return 0;
+	if (port == nullptr || !port->isOpen() || connectionLost) return 0;
 
 	try
 	{
 		return (int)port->write(message.toStdString());
 	}
-	catch (std::exception e)
+	catch (const std::exception& e)
 	{
-		LOGWARNING("Error writing to serial : " << e.what());
+		NLOGERROR("Serial", "Error writing to serial port " << info->port << " (" << message.length() << " chars) : " << e.what());
+		notifyConnectionLost(e.what());
 		return 0;
 	}
 
@@ -212,20 +219,52 @@ int SerialDevice::writeString(String message)
 int SerialDevice::writeBytes(Array<uint8_t> data)
 {
 #if SERIALSUPPORT
+	if (port == nullptr || !port->isOpen() || connectionLost) return 0;
+
 	try
 	{
 		int result = (int)port->write(data.getRawDataPointer(), data.size());
 		return result;
 	}
-	catch (std::exception e)
+	catch (const std::exception& e)
 	{
-		NLOGERROR("Serial", "Error writing to serial : " << e.what());
+		NLOGERROR("Serial", "Error writing to serial port " << info->port << " (" << data.size() << " bytes) : " << e.what());
+		notifyConnectionLost(e.what());
 		return 0;
 	}
 #else
 	return 0;
 #endif
 	}
+
+void SerialDevice::notifyConnectionLost(const String& reason)
+{
+	if (connectionLost.exchange(true)) return; //already notified
+	NLOGWARNING("Serial", "Connection lost on port " << info->port << " (" << reason << "), will try to reconnect.");
+}
+
+void SerialDevice::checkConnection()
+{
+#if SERIALSUPPORT
+	if (port == nullptr) return;
+
+	if (connectionLost)
+	{
+		//Close the stale handle, the device may have been reset (e.g. after sleep) and must be reopened
+		close();
+		reconnecting = true;
+	}
+
+	if (!reconnecting) return;
+
+	open(-1, false);
+	if (isOpen())
+	{
+		NLOG("Serial", "Port " << info->port << " reconnected.");
+		reconnecting = false;
+	}
+#endif
+}
 
 void SerialDevice::dataReceived(const var& data) {
 	listeners.call(&SerialDeviceListener::serialDataReceived, this, data);
@@ -354,6 +393,12 @@ void SerialReadThread::run()
 			}
 			break;
 			}
+		}
+		catch (const std::exception& e)
+		{
+			//A failing read means the device is gone or was reset, stop reading and let SerialManager reconnect
+			port->notifyConnectionLost(e.what());
+			return;
 		}
 		catch (...)
 		{

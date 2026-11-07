@@ -152,7 +152,20 @@ Serial::SerialImpl::open ()
     }
   }
 
-  reconfigurePort();
+#ifdef TIOCEXCL
+  // Exclusive mode: other non-root processes can't open the port while we hold it.
+  // Without this, a session leader opening it without O_NOCTTY (e.g. wineserver) makes it
+  // its controlling tty, and the kernel hangs up our fd too when that process exits.
+  ::ioctl (fd_, TIOCEXCL);
+#endif
+
+  try {
+    reconfigurePort();
+  } catch (...) {
+    ::close (fd_);
+    fd_ = -1;
+    throw;
+  }
   is_open_ = true;
 }
 
